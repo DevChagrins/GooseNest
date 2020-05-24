@@ -121,7 +121,7 @@
   <ItemGroup>
     <Compile Include="Injector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Goosling.cs" />
+    <Compile Include="GooseNest.cs" />
     <Compile Include="ScreenTextDisplay.cs" />
     <Compile Include="Wireframe.cs" />
     <Compile Include="ShowCollisions.cs" />

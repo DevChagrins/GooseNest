@@ -9,7 +9,7 @@ using UnityEngine.AI;
 
 namespace GooseNest
 {
-    class Goosling : MonoBehaviour
+    class GooseNest : MonoBehaviour
     {
 
         public static ArrayList _UDO = new ArrayList();
@@ -18,13 +18,13 @@ namespace GooseNest
 
         public bool _disableHumans;
 
-        public Vector3 _goosePos;
-
-        public float _gooseMass;
-
         float _deltaTime = 0.0f;
 
         public bool _menuEnabled;
+
+        public bool _finderDisplayed;
+        public string _finderString;
+        public List<GameObject> _foundObjects;
 
         public GUIStyle _guiStyle = null;
 
@@ -38,7 +38,6 @@ namespace GooseNest
         {
             _goose = GameObject.Find("Goose");
             _goose.AddComponent<ShowCollisions>();
-            _gooseMass = _goose.GetComponent<Rigidbody>().mass;
 
             // Slightly larger GUI style for labels
             _guiStyle = new GUIStyle();
@@ -47,7 +46,47 @@ namespace GooseNest
 
             // Screen Text Display
             _screenTextDisplay = new ScreenTextDisplay();
+            _screenTextDisplay.SetStartPosition(new Vector2(20f, 20f));
             _screenTextDisplay.Clear();
+
+            _foundObjects = new List<GameObject>();
+            _finderString = "";
+        }
+
+        void FindObjectsWithPartial(string objectName, bool printToLog = false)
+        {
+            GameObject[] gameObjects = GameObject.FindObjectsOfType<GameObject>();
+
+            print(string.Format("Finding game objects with partial name - {0}", objectName));
+            for (var index = 0; index < gameObjects.Length; index++)
+            {
+                string gameObjectName = gameObjects[index].name.ToLower();
+                if (gameObjectName.Contains(objectName.ToLower()))
+                {
+                    if(!printToLog)
+                    {
+                        _foundObjects.Add(gameObjects[index]);
+                    }
+                    else
+                    {
+                        print(gameObjects[index].name);
+                    }
+                }
+            }
+            print(string.Format("Done find partial named objects - {0}", objectName));
+        }
+
+        // This outputs to the log 
+        void FindAllGameObjects()
+        {
+            GameObject[] gameObjects = GameObject.FindObjectsOfType<GameObject>();
+
+            print("Finding all game objects.....");
+            for (var index = 0; index < gameObjects.Length; index++)
+            {
+                print(gameObjects[index].name);
+            }
+            print("...Done finding all game objects");
         }
 
         void Update()
@@ -67,6 +106,10 @@ namespace GooseNest
                         _goose.gameObject.transform.position + (_goose.gameObject.transform.forward * 1f), 
                         _goose.gameObject.transform.rotation, _goose.gameObject.transform.parent);
                 }
+                else
+                {
+                    GameObject.Destroy(_cloneGoose);
+                }
             }
 
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
@@ -83,6 +126,12 @@ namespace GooseNest
                     GameObject.Destroy(_sphereTracker);
                     _sphereTracker = null;
                 }
+            }
+
+            if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.F))
+            {
+                _finderDisplayed = !_finderDisplayed;
+                _finderString = "";
             }
 
             if(_sphereTracker)
@@ -148,12 +197,33 @@ namespace GooseNest
             if (_menuEnabled)
             {
                 GUI.Box(new Rect(20, 20, Screen.width / 2, Screen.height / 2), "Goose Nest");
-                _screenTextDisplay.AddText("Slowmotion: CTRL+1");
-                _screenTextDisplay.AddText("Save Location: CTRL+S");
-                _screenTextDisplay.AddText("Load Location: CTRL+L");
-                _screenTextDisplay.AddText("Wireframe View: CTRL+W");
+                _screenTextDisplay.AddText("Spawn a Tracking Sphere: CTRL+S");
+                _screenTextDisplay.AddText("Creates Clone Goose: CTRL+P");
                 _screenTextDisplay.AddText("Delete All Humans: CTRL+B");
-                _screenTextDisplay.AddText("Advanced Output: CTRL+O");
+            }
+
+            if (_finderDisplayed)
+            {
+                _finderString = GUI.TextField(new Rect(w - 300, 80, 200, 28), _finderString);
+                if(GUI.Button(new Rect(w - 300, 110, 60, 30), "Part"))
+                {
+                    FindObjectsWithPartial(_finderString);
+                }
+
+                if (GUI.Button(new Rect((w - 300) + 70, 110, 60, 30), "All"))
+                {
+                    FindAllGameObjects();
+                }
+
+                if (GUI.Button(new Rect((w - 300) + 140, 110, 60, 30), "Part Log"))
+                {
+                    FindObjectsWithPartial(_finderString, true);
+                }
+
+                foreach (GameObject foundObject in _foundObjects)
+                {
+                    _screenTextDisplay.AddText(foundObject.name);
+                }
             }
 
             _screenTextDisplay.DrawTextToGUI();

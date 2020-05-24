@@ -19,6 +19,11 @@ namespace GooseNest
             CurrentPosition = _startPosition;
         }
 
+        public void SetStartPosition(Vector2 position)
+        {
+            _startPosition = position;
+        }
+
         public void Clear()
         {
             _screenText.Clear();

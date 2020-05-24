@@ -11,29 +11,29 @@ namespace GooseNest
     {
         public static void Inject()
         {
-            bool flag = GameObject.Find("Goosling");
+            bool flag = GameObject.Find("GooseNest");
             if (flag)
             {
-                foreach (object obj in Goosling._UDO)
+                foreach (object obj in GooseNest._UDO)
                 {
                     UnityEngine.Object @object = (UnityEngine.Object)obj;
                     UnityEngine.Object.Destroy(@object);
                 }
-                UnityEngine.Object.Destroy(GameObject.Find("Goosling").gameObject);
+                UnityEngine.Object.Destroy(GameObject.Find("GooseNest").gameObject);
             }
-            GameObject gameObject = new GameObject("Goosling");
+            GameObject gameObject = new GameObject("GooseNest");
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
-            gameObject.AddComponent<Goosling>();
+            gameObject.AddComponent<GooseNest>();
         }
 
         public static void Unhook()
         {
-            foreach (object obj in Goosling._UDO)
+            foreach (object obj in GooseNest._UDO)
             {
                 UnityEngine.Object @object = (UnityEngine.Object)obj;
                 UnityEngine.Object.Destroy(@object);
             }
-            UnityEngine.Object.Destroy(GameObject.Find("Goosling").gameObject);
+            UnityEngine.Object.Destroy(GameObject.Find("GooseNest").gameObject);
         }
     }
 }
