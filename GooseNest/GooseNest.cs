@@ -36,8 +36,7 @@ namespace GooseNest
 
         public void Start()
         {
-            _goose = GameObject.Find("Goose");
-            _goose.AddComponent<ShowCollisions>();
+            SetupGoose();
 
             // Slightly larger GUI style for labels
             _guiStyle = new GUIStyle();
@@ -51,6 +50,15 @@ namespace GooseNest
 
             _foundObjects = new List<GameObject>();
             _finderString = "";
+        }
+
+        void SetupGoose()
+        {
+            _goose = GameObject.Find("Goose");
+            if (_goose)
+            {
+                _goose.AddComponent<ShowCollisions>();
+            }
         }
 
         void FindObjectsWithPartial(string objectName, bool printToLog = false)
@@ -93,50 +101,17 @@ namespace GooseNest
         {
             _deltaTime += (Time.unscaledDeltaTime - _deltaTime) * 0.1f;
 
+            UpdateGoose();
+
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.B))
             {
                 _disableHumans = !_disableHumans;
-            }
-
-            if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
-            {
-                if (!_cloneGoose)
-                {
-                    _cloneGoose = GameObject.Instantiate(_goose.gameObject, 
-                        _goose.gameObject.transform.position + (_goose.gameObject.transform.forward * 1f), 
-                        _goose.gameObject.transform.rotation, _goose.gameObject.transform.parent);
-                }
-                else
-                {
-                    GameObject.Destroy(_cloneGoose);
-                }
-            }
-
-            if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
-            {
-                if (!_sphereTracker)
-                {
-                    _sphereTracker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    Collider sphereCollider = _sphereTracker.GetComponent<Collider>();
-                    sphereCollider.isTrigger = true;
-                    _sphereTracker.transform.localScale = new Vector3(.5f, .5f, .5f);
-                }
-                else
-                {
-                    GameObject.Destroy(_sphereTracker);
-                    _sphereTracker = null;
-                }
             }
 
             if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.F))
             {
                 _finderDisplayed = !_finderDisplayed;
                 _finderString = "";
-            }
-
-            if(_sphereTracker)
-            {
-                _sphereTracker.transform.position = _goose.gameObject.transform.position + (_goose.gameObject.transform.forward * 1f);
             }
 
             if(_disableHumans)
@@ -151,6 +126,53 @@ namespace GooseNest
             if (Input.GetKeyDown(KeyCode.RightShift))
             {
                 _menuEnabled = !_menuEnabled;
+            }
+        }
+
+        // This is to handle any Goose related functionality
+        void UpdateGoose()
+        {
+            if(!_goose)
+            {
+                SetupGoose();
+            }
+
+            if (_goose)
+            {
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.P))
+                {
+                    if (!_cloneGoose)
+                    {
+                        _cloneGoose = GameObject.Instantiate(_goose.gameObject,
+                            _goose.gameObject.transform.position + (_goose.gameObject.transform.forward * 1f),
+                            _goose.gameObject.transform.rotation, _goose.gameObject.transform.parent);
+                    }
+                    else
+                    {
+                        GameObject.Destroy(_cloneGoose);
+                    }
+                }
+
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S))
+                {
+                    if (!_sphereTracker)
+                    {
+                        _sphereTracker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        Collider sphereCollider = _sphereTracker.GetComponent<Collider>();
+                        sphereCollider.isTrigger = true;
+                        _sphereTracker.transform.localScale = new Vector3(.5f, .5f, .5f);
+                    }
+                    else
+                    {
+                        GameObject.Destroy(_sphereTracker);
+                        _sphereTracker = null;
+                    }
+                }
+
+                if (_sphereTracker)
+                {
+                    _sphereTracker.transform.position = _goose.gameObject.transform.position + (_goose.gameObject.transform.forward * 1f);
+                }
             }
         }
 
@@ -172,17 +194,20 @@ namespace GooseNest
 
             if (!_menuEnabled)
             {
-                Vector3 _gs_position = _goose.gameObject.transform.position;
-                Quaternion _gs_rotation = _goose.gameObject.transform.rotation;
-                Vector3 _gs_velocity = _goose.GetComponent<Rigidbody>().velocity;
+                if (_goose)
+                {
+                    Vector3 _gs_position = _goose.gameObject.transform.position;
+                    Quaternion _gs_rotation = _goose.gameObject.transform.rotation;
+                    Vector3 _gs_velocity = _goose.GetComponent<Rigidbody>().velocity;
 
-                string _position_string = string.Format("Position: ({0}, {1}, {2})", _gs_position.x.ToString("F4"), _gs_position.y.ToString("F4"), _gs_position.z.ToString("F4"));
-                string _rotation_string = string.Format("Rotation: ({0}, {1}, {2}, {3})", _gs_rotation.x.ToString("F4"), _gs_rotation.y.ToString("F4"), _gs_rotation.z.ToString("F4"), _gs_rotation.w.ToString("F4"));
-                string _velocity_string = string.Format("Velocity: ({0}, {1}, {2})", _gs_velocity.x.ToString("F4"), _gs_velocity.y.ToString("F4"), _gs_velocity.z.ToString("F4"));
+                    string _position_string = string.Format("Position: ({0}, {1}, {2})", _gs_position.x.ToString("F4"), _gs_position.y.ToString("F4"), _gs_position.z.ToString("F4"));
+                    string _rotation_string = string.Format("Rotation: ({0}, {1}, {2}, {3})", _gs_rotation.x.ToString("F4"), _gs_rotation.y.ToString("F4"), _gs_rotation.z.ToString("F4"), _gs_rotation.w.ToString("F4"));
+                    string _velocity_string = string.Format("Velocity: ({0}, {1}, {2})", _gs_velocity.x.ToString("F4"), _gs_velocity.y.ToString("F4"), _gs_velocity.z.ToString("F4"));
 
-                _screenTextDisplay.AddText(_position_string);
-                _screenTextDisplay.AddText(_rotation_string);
-                _screenTextDisplay.AddText(_velocity_string);
+                    _screenTextDisplay.AddText(_position_string);
+                    _screenTextDisplay.AddText(_rotation_string);
+                    _screenTextDisplay.AddText(_velocity_string);
+                }
 
                 if (_cloneGoose)
                 {
@@ -190,8 +215,6 @@ namespace GooseNest
                     _screenTextDisplay.AddText("Clone Rotation: (" + _cloneGoose.gameObject.transform.rotation + ")");
                     _screenTextDisplay.AddText("Clone Velocity: " + _cloneGoose.GetComponent<Rigidbody>().velocity);
                 }
-
-                _screenTextDisplay.AddText("GooseNest 0.1");
             }
 
             if (_menuEnabled)
