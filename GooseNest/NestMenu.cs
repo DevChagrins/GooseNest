@@ -80,16 +80,19 @@ namespace GooseNest
                 }
             }
 
-            if(Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.R))
+            if (SceneManager.sceneCount <= 1)
             {
-                _lastClickedObjects.Clear();
-                _collectiveObjects.Clear();
-
-                UnityEngine.Object[] allObjects = GameObject.FindObjectsOfType(typeof(GameObject));
-
-                for (int index = 0; index < allObjects.Length; index++)
+                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.R))
                 {
-                    _collectiveObjects.Add(allObjects[index]);
+                    _lastClickedObjects.Clear();
+                    _collectiveObjects.Clear();
+
+                    UnityEngine.Object[] allObjects = GameObject.FindObjectsOfType(typeof(GameObject));
+
+                    for (int index = 0; index < allObjects.Length; index++)
+                    {
+                        _collectiveObjects.Add(allObjects[index]);
+                    }
                 }
             }
         }
