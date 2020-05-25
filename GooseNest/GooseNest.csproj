@@ -120,9 +120,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Injector.cs" />
+    <Compile Include="NestMenu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GooseNest.cs" />
     <Compile Include="ScreenTextDisplay.cs" />
+    <Compile Include="UDPSocket.cs" />
     <Compile Include="Wireframe.cs" />
     <Compile Include="ShowCollisions.cs" />
   </ItemGroup>

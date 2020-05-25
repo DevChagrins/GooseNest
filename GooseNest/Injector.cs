@@ -23,6 +23,7 @@ namespace GooseNest
             }
             GameObject gameObject = new GameObject("GooseNest");
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
+            gameObject.AddComponent<NestMenu>();
             gameObject.AddComponent<GooseNest>();
         }
 
