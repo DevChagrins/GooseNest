@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,6 +16,16 @@ namespace GooseNest
         private Vector2 _objectsScrollPosition;
         private Vector2 _componentScrollPosition;
         GameObject focusedObject = null;
+
+        private GameObject _saveScreenObject;
+        private Component _saveMenuComponent;
+        private Component _eraseSelectMenuComponent;
+        private Component _eraseConfirmMenuComponent;
+
+        private MethodInfo _eraseMethod;
+        private MethodInfo _loadMethod;
+
+        private bool _eraseCallSuccess = false;
 
         class GOData : System.Object
         {
@@ -56,10 +67,35 @@ namespace GooseNest
             _currentLoadedScenes = new List<string>();
             _lastClickedObjects = new List<GOData>();
             _collectiveObjects = new List<GameObject>();
+
+            FindSaveScreen();
+        }
+
+        void FindSaveScreen()
+        {
+            if(!_saveScreenObject)
+            {
+                _saveScreenObject = GameObject.Find("SaveScreen");
+
+                if (_saveScreenObject)
+                {
+                    _saveMenuComponent = _saveScreenObject.GetComponent("SaveMenu");
+                    _eraseSelectMenuComponent = _saveScreenObject.GetComponent("EraseSelectMenu");
+                    _eraseConfirmMenuComponent = _saveMenuComponent.GetComponent("EraseConfirmMenu");
+
+                    if (_eraseConfirmMenuComponent && _saveMenuComponent)
+                    {
+                        _eraseMethod = _eraseConfirmMenuComponent.GetType().GetMethod("Erase");
+                        _loadMethod = _saveMenuComponent.GetType().GetMethod("LoadSlot1");
+                    }
+                }
+            }
         }
 
         public void Update()
         {
+            FindSaveScreen();
+
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.LeftShift))
             {
                 _lastClickedObjects.Clear();
@@ -140,6 +176,33 @@ namespace GooseNest
                 _screenTextDisplay.AddText(string.Format("Built scene path: {0}", SceneUtility.GetScenePathByBuildIndex(sceneIndex)));
             }
 
+            if (_saveScreenObject)
+            {
+                _screenTextDisplay.AddText(string.Format("Found Save Screen Object"));
+            }
+            else
+            {
+                _screenTextDisplay.AddText(string.Format("Did not Find Save Screen Object"));
+            }
+
+            if (_saveMenuComponent)
+            {
+                _screenTextDisplay.AddText(string.Format("Found Save Menu Component"));
+            }
+            else
+            {
+                _screenTextDisplay.AddText(string.Format("Did not Find Save Menu Component"));
+            }
+
+            if (_eraseSelectMenuComponent)
+            {
+                _screenTextDisplay.AddText(string.Format("Found Erase Menu Component"));
+            }
+            else
+            {
+                _screenTextDisplay.AddText(string.Format("Did not Find Erase Menu Component"));
+            }
+
             if (GUI.Button(new Rect((screenWidth - 300), 110, 80, 30), "Load Game"))
             {
                 GameObject mainMenu = GameObject.Find("MainMenu");
@@ -176,6 +239,15 @@ namespace GooseNest
             if (GUI.Button(new Rect((screenWidth - 300) + 90, 110, 80, 30), "Load Loading"))
             {
                 SceneManager.LoadScene("loading");
+            }
+
+            if(_eraseMethod != null && _loadMethod != null)
+            {
+                if (GUI.Button(new Rect((screenWidth - 300), 140, 150, 35), "Clean Load Save 1"))
+                {
+                    _eraseMethod.Invoke(_eraseConfirmMenuComponent, null);
+                    _loadMethod.Invoke(_saveMenuComponent, null);
+                }
             }
 
             _screenTextDisplay.SetPosition(new Vector2(20, 100));
@@ -274,24 +346,31 @@ namespace GooseNest
                     GUI.Label(new Rect(viewPosition, viewSize), string.Format("{0} - {1}", component.name, component.GetType()));
                     viewPosition += viewStep;
 
-                    System.Reflection.MemberInfo[] compMembers = component.GetType().GetMembers();
-                    System.Reflection.FieldInfo[] compFields = component.GetType().GetFields();
-                    System.Reflection.MethodInfo[] compMethods = component.GetType().GetMethods();
+                    MemberInfo[] compMembers = component.GetType().GetMembers();
+                    FieldInfo[] compFields = component.GetType().GetFields();
+                    MethodInfo[] compMethods = component.GetType().GetMethods();
                     if (component.GetType().Name.Equals("MouseableMenuCollider", System.StringComparison.InvariantCultureIgnoreCase))
                     {
-                        foreach(System.Reflection.FieldInfo field in compFields)
+                        foreach(FieldInfo field in compFields)
                         {
                             GUI.Label(new Rect(viewPosition, viewSize * 2f), string.Format("{0} : {1}", field.GetValue(component).GetType(), field.GetValue(component)));
                             viewPosition += viewStep;
                         }
                     }
 
-                    if (component.GetType().Name.Equals("EraseSelectMenu", System.StringComparison.InvariantCultureIgnoreCase) 
-                        /*|| component.GetType().Name.Equals("SaveMenu", System.StringComparison.InvariantCultureIgnoreCase)*/)
+                    if (component.GetType().Name.Equals("EraseSelectMenu", System.StringComparison.InvariantCultureIgnoreCase) ||
+                         component.GetType().Name.Equals("SaveMenu", System.StringComparison.InvariantCultureIgnoreCase) ||
+                         component.GetType().Name.Equals("EraseConfirmMenu", System.StringComparison.InvariantCultureIgnoreCase))
                     {
-                        foreach (System.Reflection.MethodInfo method in compMethods)
+                        //foreach (System.Reflection.MethodInfo method in compMethods)
+                        //{
+                        //    GUI.Label(new Rect(viewPosition, viewSize * 2f), string.Format("{0}", method.Name));
+                        //    viewPosition += viewStep;
+                        //}
+
+                        foreach (FieldInfo info in compFields)
                         {
-                            GUI.Label(new Rect(viewPosition, viewSize * 2f), string.Format("{0}", method.Name));
+                            GUI.Label(new Rect(viewPosition, viewSize * 2f), string.Format("  {0} - {1} : {2}", info.Name, info.GetValue(component), info.GetValue(component).GetType().Name));
                             viewPosition += viewStep;
                         }
                     }
@@ -306,7 +385,19 @@ namespace GooseNest
                 GUI.Label(new Rect(viewPosition, viewSize), string.Format("Tag: {0}", focusedObject.tag));
                 viewPosition += viewStep;
 
-                GUI.Label(new Rect(viewPosition, viewSize), string.Format("Parent: {0}", focusedObject.transform.parent ? focusedObject.transform.parent.gameObject.name : "No parent"));
+                if (focusedObject.transform.parent)
+                {
+                    if (GUI.Button(new Rect(viewPosition, viewSize), string.Format("Parent: {0}", focusedObject.transform.parent.gameObject.name)))
+                    {
+                        focusedObject = focusedObject.transform.parent.gameObject;
+                        _componentScrollPosition = Vector2.zero;
+                    }
+                }
+                else
+                {
+                    GUI.Label(new Rect(viewPosition, viewSize), string.Format("Parent: {0}", focusedObject.transform.parent ? focusedObject.transform.parent.gameObject.name : "No parent"));
+                }
+
                 viewPosition += viewStep;
 
                 GUI.EndScrollView();
